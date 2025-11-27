@@ -13,7 +13,16 @@ import inquirer
 def main():
     # Check command line arguments
     if len(sys.argv) != 2:
-        print("Usage: python column_selector.py <excel_file_path>")
+        print("Error: No Excel file specified!\n")
+        print("Usage: python column_selector.py <excel_file_path>\n")
+        print("Examples:")
+        print("  python column_selector.py data.xlsx")
+        print("  python column_selector.py /path/to/your/file.xlsx")
+        print("  python column_selector.py ~/Documents/spreadsheet.xls\n")
+        print("This tool will:")
+        print("  1. Read your Excel file")
+        print("  2. Let you select which columns to keep")
+        print("  3. Save a filtered version with '_filtered' appended to the name")
         sys.exit(1)
     
     input_file = sys.argv[1]
@@ -45,7 +54,7 @@ def main():
                 'columns',
                 message="Select columns to include (use spacebar to select, enter to confirm)",
                 choices=available_columns,
-                default=available_columns  # All selected by default
+                default=[]  # None selected by default
             )
         ]
         
