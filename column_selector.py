@@ -8,6 +8,38 @@ import sys
 import os
 import pandas as pd
 import inquirer
+from openpyxl import load_workbook
+
+
+def get_column_formats(filepath, column_names):
+    """Extract number formats from the original Excel file for each column."""
+    wb = load_workbook(filepath)
+    ws = wb.active
+    
+    column_formats = {}
+    for col_idx, col_name in enumerate(column_names, start=1):
+        # Check format from first data row (row 2)
+        cell = ws.cell(row=2, column=col_idx)
+        if cell.number_format and cell.number_format != 'General':
+            column_formats[col_name] = cell.number_format
+    
+    wb.close()
+    return column_formats
+
+
+def apply_column_formats(filepath, column_names, column_formats, row_count):
+    """Apply number formats to the output Excel file."""
+    wb = load_workbook(filepath)
+    ws = wb.active
+    
+    for col_idx, col_name in enumerate(column_names, start=1):
+        if col_name in column_formats:
+            # Apply format to all data cells in this column (skip header)
+            for row in range(2, row_count + 2):
+                ws.cell(row=row, column=col_idx).number_format = column_formats[col_name]
+    
+    wb.save(filepath)
+    wb.close()
 
 
 def main():
@@ -48,6 +80,9 @@ def main():
         # Get available columns
         available_columns = list(df.columns)
         
+        # Capture number formats from original file (for percentages, currency, etc.)
+        column_formats = get_column_formats(input_file, available_columns)
+        
         # Interactive column selection using checkboxes
         questions = [
             inquirer.Checkbox(
@@ -81,6 +116,9 @@ def main():
         # Save the filtered Excel file
         print(f"\nSaving filtered file to: {output_file}")
         filtered_df.to_excel(output_file, index=False)
+        
+        # Apply original number formats (percentages, currency, etc.) to the output file
+        apply_column_formats(output_file, selected_columns, column_formats, len(filtered_df))
         
         print(f"✓ Success! Filtered file saved with {len(filtered_df)} rows and {len(selected_columns)} columns.")
         
